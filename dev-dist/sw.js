@@ -67,10 +67,14 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-7e5eb42b'], (function (workbox) { 'use strict';
+define(['./workbox-17772b39'], (function (workbox) { 'use strict';
 
-  self.skipWaiting();
-  workbox.clientsClaim();
+  self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+      self.skipWaiting();
+    }
+  });
+
   /**
    * The precacheAndRoute() method efficiently caches and responds to
    * requests for URLs in the manifest.
@@ -81,11 +85,39 @@ define(['./workbox-7e5eb42b'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "index.html",
-    "revision": "0.8d13lllmbco"
+    "revision": "0.e8hrkqseqh"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
     allowlist: [/^\/$/]
   }));
+  workbox.registerRoute(/^http:\/\/localhost:8001\/.*/i, new workbox.CacheFirst({
+    "cacheName": "google-fonts-cache",
+    plugins: [new workbox.ExpirationPlugin({
+      maxEntries: 10,
+      maxAgeSeconds: 31536000
+    }), new workbox.CacheableResponsePlugin({
+      statuses: [0, 200]
+    })]
+  }), 'GET');
+  workbox.registerRoute(/^https:\/\/fonts\.gstatic\.com\/.*/i, new workbox.CacheFirst({
+    "cacheName": "gstatic-fonts-cache",
+    plugins: [new workbox.ExpirationPlugin({
+      maxEntries: 10,
+      maxAgeSeconds: 31536000
+    }), new workbox.CacheableResponsePlugin({
+      statuses: [0, 200]
+    })]
+  }), 'GET');
+  workbox.registerRoute(/^https:\/\/api\.exemplo\.com\/.*/i, new workbox.NetworkFirst({
+    "cacheName": "api-cache",
+    "networkTimeoutSeconds": 10,
+    plugins: [new workbox.ExpirationPlugin({
+      maxEntries: 50,
+      maxAgeSeconds: 86400
+    }), new workbox.CacheableResponsePlugin({
+      statuses: [0, 200]
+    })]
+  }), 'GET');
 
 }));

@@ -24,15 +24,15 @@ export const useTasksStore = defineStore('tasks', () => {
     }
   }
 
-  async function addTask(title) {
-    if (!title.trim()) return;
+    async function addTask(payload) {
+    if (!payload.title?.trim()) return;
     error.value = null;
     try {
-      const response = await tasksApi.create(title.trim());
-      tasks.value.push(response.data);
+      const response = await tasksApi.create(payload)
+      tasks.value.push(response.data)
     } catch (err) {
-      error.value = 'Erro ao adicionar tarefa.';
-      console.error(err);
+      error.value = 'Erro ao adicionar tarefa.'
+      console.error(err)
     }
   }
 

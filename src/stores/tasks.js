@@ -24,7 +24,7 @@ export const useTasksStore = defineStore('tasks', () => {
     }
   }
 
-    async function addTask(payload) {
+      async function addTask(payload) {
     if (!payload.title?.trim()) return;
     error.value = null;
     try {
@@ -35,7 +35,6 @@ export const useTasksStore = defineStore('tasks', () => {
       console.error(err)
     }
   }
-
   async function toggleTask(id) {
     const task = tasks.value.find((t) => t.id === id);
     if (!task) return;

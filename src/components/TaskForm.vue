@@ -21,34 +21,42 @@
     </div>
 
     <div class="image-section">
-      <img
-        v-if="previewUrl || editingTask.img_url"
-        :src="previewUrl || editingTask.img_url"
-        class="image-preview"
-        alt="Imagem da tarefa"
-      />
-      <label class="image-label" :class="{ disabled: uploading }">
-        <span v-if="uploading" class="upload-status">Enviando...</span>
-        <span v-else>
-          {{ previewUrl || editingTask.img_url
-            ? 'Trocar imagem'
-            : 'Adicionar imagem'
-          }}
-        </span>
-        <input
-          type="file"
-          accept="image/jpeg,image/png"
-          capture="environment"
-          class="image-input"
-          :disabled="uploading"
-          @change="handleImageChange"
-        />
-      </label>
-        <p class="image-help">
-          Em celular, o botão pode abrir a câmera.
-          Em notebook, abre o seletor de arquivos.
-        </p>
-    </div>
+  <!-- Preview da imagem já salva ou capturada -->
+  <img
+    v-if="previewUrl || editingTask?.img_url"
+    :src="previewUrl || editingTask?.img_url"
+    class="image-preview"
+    alt="Imagem da tarefa"
+  />
+
+  <!-- Input com capture (padrão) -->
+  <label class="image-label" :class="{ disabled: uploading }">
+    <span v-if="uploading" class="upload-status">Enviando...</span>
+    <span v-else>Adicionar imagem</span>
+    <input
+      type="file"
+      accept="image/jpeg,image/png"
+      capture="environment"
+      class="image-input"
+      :disabled="uploading"
+      @change="handleImageChange"
+    />
+  </label>
+
+  <!-- Alternativa com preview ao vivo -->
+  <button
+    type="button"
+    class="task-button-secondary"
+    @click="showCameraCapture = !showCameraCapture"
+  >
+    {{ showCameraCapture ? 'Fechar câmera' : 'Abrir preview ao vivo' }}
+  </button>
+
+  <CameraCapture
+    v-if="showCameraCapture"
+    @captured="handleCameraCapture"
+  />
+</div>
   </form>
 </template>
 
@@ -98,10 +106,11 @@ async function handleImageChange(event) {
 }
 
 function handleSubmit() {
-  if (!newTask.value.trim()) return
-   const payload = {
+  if (!newTask.value.trim()) return;
+
+  const payload = {
     title: newTask.value.trim(),
-    imgAttachmentKey: imgAttachmentKey.value,
+    img_attachment_key: imgAttachmentKey.value,
   };
 
   if (props.editingTask) {
@@ -109,7 +118,9 @@ function handleSubmit() {
   } else {
     emit('add', payload);
   }
+
   newTask.value = '';
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = null;
   imgAttachmentKey.value = null;
 }

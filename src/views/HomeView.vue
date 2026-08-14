@@ -60,11 +60,19 @@ onMounted(() => {
 })
 
 function handleAdd(payload) {
-  store.addTask(payload);
+  store.addTask(payload)
 }
 
-function handleUpdate(id, title, imgAttachmentKey) {
-  store.updateTask(id, { title, imgAttachmentKey })
+function handleUpdate(id, titleOrPayload, imgAttachmentKey) {
+  if (titleOrPayload && typeof titleOrPayload === 'object') {
+    const payload = titleOrPayload
+    store.updateTask(id, {
+      title: payload.title,
+      imgAttachmentKey: payload.img_attachment_key ?? payload.imgAttachmentKey,
+    })
+  } else {
+    store.updateTask(id, { title: titleOrPayload, imgAttachmentKey })
+  }
   editingTask.value = null
 }
 
@@ -84,7 +92,6 @@ function handleRemove(id) {
   if (editingTask.value?.id === id) editingTask.value = null
   store.removeTask(id)
 }
-
 </script>
 
 <style scoped>

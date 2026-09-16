@@ -12,31 +12,52 @@
     <p v-if="store.loading" class="loading-message">Carregando tarefas...</p>
 
     <template v-else>
-      <section v-if="store.pendingTasks.length > 0">
-        <h2 class="section-title">Pendentes ({{ store.pendingTasks.length }})</h2>
+      <label class="location-filter">
+        <input v-model="onlyWithLocation" type="checkbox" />
+        Somente com localização
+      </label>
+
+      <section v-if="pendingTasks.length > 0">
+        <h2 class="section-title">Pendentes ({{ pendingTasks.length }})</h2>
         <TaskItem
-          v-for="task in store.pendingTasks"
+          v-for="task in pendingTasks"
           :key="task.id"
           :task="task"
+          :expanded="isExpanded(task.id)"
           @toggle="handleToggle"
           @remove="handleRemove"
           @edit="handleEdit"
+          @expand="toggleExpanded"
         />
+        <template v-for="task in pendingTasks" :key="`pending-map-${task.id}`">
+          <TaskLocationMap
+            v-if="isExpanded(task.id) && task.latitude != null"
+            :location="taskLocation(task)"
+          />
+        </template>
       </section>
 
-      <section v-if="store.completedTasks.length > 0">
-        <h2 class="section-title">Concluídas ({{ store.completedTasks.length }})</h2>
+      <section v-if="completedTasks.length > 0">
+        <h2 class="section-title">Concluídas ({{ completedTasks.length }})</h2>
         <TaskItem
-          v-for="task in store.completedTasks"
+          v-for="task in completedTasks"
           :key="task.id"
           :task="task"
+          :expanded="isExpanded(task.id)"
           @toggle="handleToggle"
           @remove="handleRemove"
           @edit="handleEdit"
+          @expand="toggleExpanded"
         />
+        <template v-for="task in completedTasks" :key="`completed-map-${task.id}`">
+          <TaskLocationMap
+            v-if="isExpanded(task.id) && task.latitude != null"
+            :location="taskLocation(task)"
+          />
+        </template>
       </section>
 
-      <p v-if="store.tasks.length === 0" class="empty-message">
+      <p v-if="filteredTasks.length === 0" class="empty-message">
         Nenhuma tarefa cadastrada. Adicione uma acima.
       </p>
     </template>
@@ -46,14 +67,22 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import TaskForm from '../components/TaskForm.vue'
 import TaskItem from '../components/TaskItem.vue'
 import InstallButton from '../components/InstallButton.vue'
+import TaskLocationMap from '../components/TaskLocationMap.vue'
 import { useTasksStore } from '../stores/tasks.js'
 
 const store = useTasksStore()
 const editingTask = ref(null)
+const onlyWithLocation = ref(false)
+const expandedTaskId = ref(null)
+const filteredTasks = computed(() =>
+  onlyWithLocation.value ? store.tasks.filter((task) => task.latitude != null) : store.tasks,
+)
+const pendingTasks = computed(() => filteredTasks.value.filter((task) => !task.done))
+const completedTasks = computed(() => filteredTasks.value.filter((task) => task.done))
 
 onMounted(() => {
   store.fetchTasks()
@@ -69,6 +98,11 @@ function handleUpdate(id, titleOrPayload, imgAttachmentKey) {
     store.updateTask(id, {
       title: payload.title,
       imgAttachmentKey: payload.img_attachment_key ?? payload.imgAttachmentKey,
+      latitude: payload.latitude,
+      longitude: payload.longitude,
+      geolocation_accuracy: payload.geolocation_accuracy,
+      geolocation_timestamp: payload.geolocation_timestamp,
+      location_label: payload.location_label,
     })
   } else {
     store.updateTask(id, { title: titleOrPayload, imgAttachmentKey })
@@ -91,6 +125,23 @@ function handleToggle(id) {
 function handleRemove(id) {
   if (editingTask.value?.id === id) editingTask.value = null
   store.removeTask(id)
+}
+
+function toggleExpanded(id) {
+  expandedTaskId.value = expandedTaskId.value === id ? null : id
+}
+
+function isExpanded(id) {
+  return expandedTaskId.value === id
+}
+
+function taskLocation(task) {
+  return {
+    latitude: task.latitude,
+    longitude: task.longitude,
+    accuracy: task.geolocation_accuracy,
+    label: task.location_label,
+  }
 }
 </script>
 
@@ -123,5 +174,12 @@ function handleRemove(id) {
   color: #666;
   font-size: 0.9rem;
   padding: 8px 0;
+}
+
+.location-filter {
+  display: block;
+  margin: 12px 0;
+  color: #555;
+  font-size: 0.9rem;
 }
 </style>

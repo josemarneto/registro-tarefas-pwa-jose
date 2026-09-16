@@ -14,6 +14,19 @@ export function locationCacheKey(latitude, longitude) {
   return `${Number(latitude).toFixed(4)},${Number(longitude).toFixed(4)}`
 }
 
+export function classifyAccuracy(accuracy) {
+  if (accuracy == null) return null
+  if (accuracy < 20) return 'boa'
+  if (accuracy <= 100) return 'moderada'
+  return 'baixa'
+}
+
+export function roundCoordinate(value, decimals = 2) {
+  if (value == null) return null
+  const factor = 10 ** decimals
+  return Math.round(value * factor) / factor
+}
+
 export function buildLocationPayload(location) {
   if (!location) {
     return {
@@ -29,9 +42,7 @@ export function buildLocationPayload(location) {
     latitude: location.latitude ?? null,
     longitude: location.longitude ?? null,
     geolocation_accuracy: location.accuracy ?? null,
-    geolocation_timestamp: location.timestamp
-      ? new Date(location.timestamp).toISOString()
-      : null,
+    geolocation_timestamp: location.timestamp ? new Date(location.timestamp).toISOString() : null,
     location_label: location.label?.trim() || null,
   }
 }

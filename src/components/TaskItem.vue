@@ -1,16 +1,17 @@
 <template>
   <div class="task-item" :class="{ done: task.done }">
-    <img
-      v-if="task.img_url"
-      :src="task.img_url"
-      class="task-thumbnail"
-      alt="Imagem da tarefa"
-    />
+    <img v-if="task.img_url" :src="task.img_url" class="task-thumbnail" alt="Imagem da tarefa" />
     <label class="task-label">
       <input type="checkbox" :checked="task.done" @change="$emit('toggle', task.id)" />
       <span class="task-title">{{ task.title }}</span>
+      <span v-if="task.location_label" class="task-location-tag" :title="task.location_label">
+        📍 {{ task.location_label }}
+      </span>
     </label>
     <div class="task-actions">
+      <button v-if="task.latitude != null" class="task-expand" @click="$emit('expand', task.id)">
+        {{ expanded ? 'Ocultar mapa' : 'Ver mapa' }}
+      </button>
       <button class="task-edit" @click="$emit('edit', task)">Editar</button>
       <button class="task-remove" @click="$emit('remove', task.id)">Remover</button>
     </div>
@@ -23,9 +24,13 @@ defineProps({
     type: Object,
     required: true,
   },
+  expanded: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-defineEmits(['toggle', 'remove', 'edit'])
+defineEmits(['toggle', 'remove', 'edit', 'expand'])
 </script>
 
 <style scoped>
@@ -73,6 +78,11 @@ defineEmits(['toggle', 'remove', 'edit'])
   font-size: 1rem;
 }
 
+.task-location-tag {
+  color: #356b4d;
+  font-size: 0.8rem;
+}
+
 .task-item.done .task-title {
   text-decoration: line-through;
   color: #999;
@@ -108,5 +118,14 @@ defineEmits(['toggle', 'remove', 'edit'])
 
 .task-edit:hover {
   text-decoration: underline;
+}
+
+.task-expand {
+  background: none;
+  border: none;
+  color: #356b4d;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 8px;
 }
 </style>
